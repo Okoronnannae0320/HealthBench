@@ -4,84 +4,76 @@ import healthbench.model.PatientRecord;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * DatasetLoader.java
- * ===================
- * SHARED UTILITY — Loads the Kaggle Healthcare CSV into PatientRecord objects.
- *
- * NOTE: Ange owns the GUI-integrated version. This standalone loader lets
- * ALL team members test their structures independently.
- *
- * @author Code Surgeons
- */
 public class DatasetLoader {
 
-    public static List<PatientRecord> loadRecords(String filePath) throws IOException {
-        List<PatientRecord> records = new ArrayList<>();
+    public static PatientRecord[] loadRecords(String filePath) throws IOException {
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String headerLine = br.readLine(); // Skip header row
-            if (headerLine == null) {
-                System.out.println("Warning: CSV file is empty.");
-                return records;
+        PatientRecord[] records = new PatientRecord[10000];
+        int count = 0;
+
+        BufferedReader br = new BufferedReader(new FileReader(filePath));
+        String header = br.readLine(); // skip header
+
+        String line;
+        int idCounter = 1;
+
+        while ((line = br.readLine()) != null) {
+
+            String[] f = line.split(",", -1);
+            if (f.length < 15) continue;
+
+            String id = "P" + idCounter++;
+
+            PatientRecord r = new PatientRecord(
+                    id,
+                    f[0].trim(),
+                    parseInt(f[1]),
+                    f[2].trim(),
+                    f[3].trim(),
+                    f[4].trim(),
+                    f[5].trim(),
+                    f[6].trim(),
+                    f[7].trim(),
+                    f[8].trim(),
+                    parseDouble(f[9]),
+                    parseInt(f[10]),
+                    f[11].trim(),
+                    f[12].trim(),
+                    f[13].trim(),
+                    f[14].trim()
+            );
+
+            if (count == records.length) {
+                records = resize(records);
             }
 
-            String line;
-            int idCounter = 1;
-
-            while ((line = br.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty()) continue;
-
-                try {
-                    PatientRecord record = parseLine(line, idCounter);
-                    if (record != null) {
-                        records.add(record);
-                        idCounter++;
-                    }
-                } catch (Exception e) {
-                    System.out.println("  Skipping row " + idCounter + ": " + e.getMessage());
-                }
-            }
+            records[count++] = r;
         }
 
-        System.out.println("Dataset loaded: " + records.size() + " patient records.");
-        return records;
+        br.close();
+        return trim(records, count);
     }
 
-    /**
-     * CSV column indices (0-based):
-     *   0=Name, 1=Age, 2=Gender, 3=Blood Type, 4=Medical Condition,
-     *   5=Date of Admission, 6=Doctor, 7=Hospital, 8=Insurance Provider,
-     *   9=Billing Amount, 10=Room Number, 11=Admission Type,
-     *   12=Discharge Date, 13=Medication, 14=Test Results
-     */
-    private static PatientRecord parseLine(String line, int idCounter) {
-        String[] fields = line.split(",");
-        if (fields.length < 12) return null;
-
-        String patientId = String.format("P%04d", idCounter);
-        int age = Integer.parseInt(fields[1].trim());
-        String gender = fields[2].trim();
-        String medicalCondition = fields[4].trim();
-        String dateOfAdmission = fields[5].trim();
-        String hospital = fields[7].trim();
-        double billingAmount = Double.parseDouble(fields[9].trim());
-        String admissionType = fields[11].trim();
-
-        return new PatientRecord(patientId, age, gender, medicalCondition,
-                hospital, admissionType, billingAmount, dateOfAdmission);
+    private static int parseInt(String s) {
+        try { return Integer.parseInt(s.trim()); }
+        catch (Exception e) { return 0; }
     }
 
-    /** For manually inserting records through the GUI. */
-    public static PatientRecord createPatientRecord(String patientId, int age,
-                                                    String gender, String medicalCondition,
-                                                    String hospital, String admissionType,
-                                                    double billingAmount, String dateOfAdmission) {
-        return new PatientRecord(patientId, age, gender, medicalCondition,
-                hospital, admissionType, billingAmount, dateOfAdmission);
+    private static double parseDouble(String s) {
+        try { return Double.parseDouble(s.trim()); }
+        catch (Exception e) { return 0.0; }
+    }
+
+    private static PatientRecord[] resize(PatientRecord[] arr) {
+        PatientRecord[] newArr = new PatientRecord[arr.length * 2];
+        for (int i = 0; i < arr.length; i++) newArr[i] = arr[i];
+        return newArr;
+    }
+
+    private static PatientRecord[] trim(PatientRecord[] arr, int size) {
+        PatientRecord[] out = new PatientRecord[size];
+        for (int i = 0; i < size; i++) out[i] = arr[i];
+        return out;
     }
 }
