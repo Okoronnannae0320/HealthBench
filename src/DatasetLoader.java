@@ -1,10 +1,8 @@
 package healthbench.util;
-
 import healthbench.model.PatientRecord;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
 public class DatasetLoader {
 
     public static PatientRecord[] loadRecords(String filePath) throws IOException {
@@ -74,6 +72,17 @@ public class DatasetLoader {
     private static PatientRecord[] trim(PatientRecord[] arr, int size) {
         PatientRecord[] out = new PatientRecord[size];
         for (int i = 0; i < size; i++) out[i] = arr[i];
+        return out;
+    }
+
+   //controls the sizes used for the benchmark
+    public static PatientRecord[] limit(PatientRecord[] full, int amount) {
+        if (amount > full.length) amount = full.length;
+
+        PatientRecord[] out = new PatientRecord[amount];
+        for (int i = 0; i < amount; i++) {
+            out[i] = full[i];
+        }
         return out;
     }
 }

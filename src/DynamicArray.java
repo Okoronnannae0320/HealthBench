@@ -1,3 +1,6 @@
+package healthbench.structures;
+import healthbench.model.PatientRecord;
+
 public class DynamicArray implements DataStructure {
 
     private PatientRecord[] records;
@@ -47,6 +50,7 @@ public class DynamicArray implements DataStructure {
         return result;
     }
 
+
     private void resize() {
         PatientRecord[] newRecords = new PatientRecord[records.length * 2];
         for (int i = 0; i < records.length; i++) {
@@ -54,4 +58,43 @@ public class DynamicArray implements DataStructure {
         }
         records = newRecords;
     }
+
+    // Merge Sorting Code by age 0-120
+    public void sortByAge() {
+        if (size <= 1) return;
+        mergeSort(0, size - 1);
+    }
+
+    private void mergeSort(int left, int right) {
+        if (left >= right) return;
+
+        int mid = (left + right) / 2;
+        mergeSort(left, mid);
+        mergeSort(mid + 1, right);
+        merge(left, mid, right);
+    }
+
+    private void merge(int left, int mid, int right) {
+        PatientRecord[] temp = new PatientRecord[right - left + 1];
+
+        int i = left;
+        int j = mid + 1;
+        int k = 0;
+
+        while (i <= mid && j <= right) {
+            if (records[i].getAge() <= records[j].getAge()) {
+                temp[k++] = records[i++];
+            } else {
+                temp[k++] = records[j++];
+            }
+        }
+
+        while (i <= mid) temp[k++] = records[i++];
+        while (j <= right) temp[k++] = records[j++];
+
+        for (int x = 0; x < temp.length; x++) {
+            records[left + x] = temp[x];
+        }
+    }
 }
+
