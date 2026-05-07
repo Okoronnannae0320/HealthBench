@@ -85,6 +85,7 @@ public class LinkedListStructure implements DataStructure {
 
         return result;
     }
+
     //Merge Sorting Code by age  0-120
     public void sortByAge() {
         head = mergeSortIterative(head);
@@ -156,4 +157,39 @@ public class LinkedListStructure implements DataStructure {
         }
         return count;
     }
+
+    public void selectionSortByAge() {
+        // Convert linked list to array
+        PatientRecord[] arr = traverseRecords();
+
+        // Sort array using selection sort
+        selectionSort(arr);
+
+        // Rebuild linked list from sorted array
+        head = null;
+        size = 0;
+        for (PatientRecord r : arr) {
+            insertRecord(r);
+        }
+    }
+
+    private void selectionSort(PatientRecord[] arr) {
+        int n = arr.length;
+
+        for (int i = 0; i < n - 1; i++) {
+            int minIndex = i;
+
+            for (int j = i + 1; j < n; j++) {
+                if (arr[j].getAge() < arr[minIndex].getAge()) {
+                    minIndex = j;
+                }
+            }
+
+            PatientRecord temp = arr[minIndex];
+            arr[minIndex] = arr[i];
+            arr[i] = temp;
+        }
+    }
 }
+
+

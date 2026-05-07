@@ -94,7 +94,26 @@ public class DynamicArray implements DataStructure {
 
         for (int x = 0; x < temp.length; x++) {
             records[left + x] = temp[x];
+
+        }
+    }
+
+    public void selectionSortByAge() {
+        if (size <= 1) return;
+
+        for (int i = 0; i < size - 1; i++) {
+            int minIndex = i;
+
+            for (int j = i + 1; j < size; j++) {
+                if (records[j].getAge() < records[minIndex].getAge()) {
+                    minIndex = j;
+                }
+            }
+
+            // swap
+            PatientRecord temp = records[minIndex];
+            records[minIndex] = records[i];
+            records[i] = temp;
         }
     }
 }
-

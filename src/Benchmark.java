@@ -11,7 +11,7 @@ public class Benchmark {
         PatientRecord[] full = DatasetLoader.loadRecords("dataset/healthcare_dataset.csv");
         System.out.println("Loaded: " + full.length + " records\n");
 
-        PatientRecord[] data5000  = DatasetLoader.limit(full, 5000);
+        PatientRecord[] data5000 = DatasetLoader.limit(full, 5000);
         PatientRecord[] data10000 = DatasetLoader.limit(full, 10000);
         PatientRecord[] data20000 = DatasetLoader.limit(full, 20000);
         PatientRecord[] data30000 = DatasetLoader.limit(full, 30000);
@@ -40,21 +40,42 @@ public class Benchmark {
 
         long start, end;
 
-        // Insert
+        // INSERT
         start = System.nanoTime();
         for (PatientRecord r : data) ds.insertRecord(r);
         end = System.nanoTime();
         long insertTime = end - start;
 
-        // Search
-        start = System.nanoTime();
-        for (int i = 0; i < 100 && i < data.length; i++) {
-            ds.searchRecord(data[i].getId());
-        }
-        end = System.nanoTime();
-        long searchTime = end - start;
 
-        // Delete
+
+        // SEARCH TESTS (begin/mid/end/null)
+
+        // Beginning
+        start = System.nanoTime();
+        ds.searchRecord(data[0].getId());
+        end = System.nanoTime();
+        long searchBeginning = end - start;
+
+        // Middle
+        start = System.nanoTime();
+        ds.searchRecord(data[data.length / 2].getId());
+        end = System.nanoTime();
+        long searchMiddle = end - start;
+
+        // End
+        start = System.nanoTime();
+        ds.searchRecord(data[data.length - 1].getId());
+        end = System.nanoTime();
+        long searchEnd = end - start;
+
+        // Null (not found)
+        start = System.nanoTime();
+        ds.searchRecord("ID_NOT_FOUND_123456");
+        end = System.nanoTime();
+        long searchNull = end - start;
+
+
+        // DELETE (delete first 100 items)
         start = System.nanoTime();
         for (int i = 0; i < 100 && i < data.length; i++) {
             ds.deleteRecord(data[i].getId());
@@ -62,26 +83,57 @@ public class Benchmark {
         end = System.nanoTime();
         long deleteTime = end - start;
 
-        // Sort (only for array + linked list)
-        long sortTime = -1;
+
+
+        // SORTING (DynamicArray + LinkedList)
+
+        long mergeSortTime = -1;
+        long selectionSortTime = -1;
+
         if (name.equals("DynamicArray")) {
             DynamicArray da = (DynamicArray) ds;
+
+            // Merge Sort
             start = System.nanoTime();
             da.sortByAge();
             end = System.nanoTime();
-            sortTime = end - start;
+            mergeSortTime = end - start;
+
+            // Selection Sort
+            start = System.nanoTime();
+            da.selectionSortByAge();
+            end = System.nanoTime();
+            selectionSortTime = end - start;
         }
-        else if (name.equals("LinkedListStructure")) {
+
+        if (name.equals("LinkedListStructure")) {
             LinkedListStructure ll = (LinkedListStructure) ds;
+
+            // Merge Sort
             start = System.nanoTime();
             ll.sortByAge();
             end = System.nanoTime();
-            sortTime = end - start;
+            mergeSortTime = end - start;
+
+            // Selection Sort
+            start = System.nanoTime();
+            ll.selectionSortByAge();
+            end = System.nanoTime();
+            selectionSortTime = end - start;
         }
 
-        System.out.println(size + " records -> Insert: " + insertTime +
-                " ns | Search: " + searchTime +
-                " ns | Delete: " + deleteTime +
-                (sortTime >= 0 ? " ns | Sort: " + sortTime + " ns" : " | Sort: N/A"));
+
+
+        // PRINT RESULTS
+        System.out.println(size + " records -> " +
+                "Insert: " + insertTime + " ns | " +
+                "Search Begin: " + searchBeginning + " ns | " +
+                "Search Mid: " + searchMiddle + " ns | " +
+                "Search End: " + searchEnd + " ns | " +
+                "Search Null: " + searchNull + " ns | " +
+                "Delete: " + deleteTime + " ns | " +
+                "Merge Sort: " + mergeSortTime + " ns | " +
+                "Selection Sort: " + selectionSortTime + " ns");
+
     }
 }
