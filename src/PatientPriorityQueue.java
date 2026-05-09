@@ -1,12 +1,12 @@
-package healthbench.structures;
 import java.util.PriorityQueue;
 import java.util.Comparator;
-import healthbench.model.PatientRecord;
 
+// PatientPriorityQueue simulates hospital admission order.
 public class PatientPriorityQueue implements DataStructure {
 
     private PriorityQueue<PatientRecord> heap;
 
+    // Emergency patients come first, then older patients when priority ties.
     public PatientPriorityQueue() {
         heap = new PriorityQueue<>(new Comparator<PatientRecord>() {
             @Override
@@ -28,6 +28,7 @@ public class PatientPriorityQueue implements DataStructure {
         });
     }
 
+    // Convert admission type text into a numeric priority.
     private int priorityValue(String type) {
         switch (type.toLowerCase()) {
             case "emergency": return 3;
@@ -38,11 +39,13 @@ public class PatientPriorityQueue implements DataStructure {
         }
     }
 
+    // Add a patient to the heap using the priority rule.
     @Override
     public void insertRecord(PatientRecord record) {
         heap.add(record);
     }
 
+    // Priority queues do not search by ID directly, so this scans the heap.
     @Override
     public PatientRecord searchRecord(String id) {
         for (PatientRecord r : heap) {
@@ -53,6 +56,7 @@ public class PatientPriorityQueue implements DataStructure {
         return null;
     }
 
+    // Delete scans for the matching ID and removes that patient.
     @Override
     public boolean deleteRecord(String id) {
         for (PatientRecord r : heap) {
@@ -64,9 +68,24 @@ public class PatientPriorityQueue implements DataStructure {
         return false;
     }
 
+    // Return the current heap contents as an array for traversal output.
     @Override
     public PatientRecord[] traverseRecords() {
         return heap.toArray(new PatientRecord[0]);
     }
-}
 
+    // Remove and return the next patient to be admitted.
+    public PatientRecord processNextRecord() {
+        return heap.poll();
+    }
+
+    // View the next patient without removing that record.
+    public PatientRecord peekNextRecord() {
+        return heap.peek();
+    }
+
+    // Tell the simulation whether any patients remain.
+    public boolean isEmpty() {
+        return heap.isEmpty();
+    }
+}
