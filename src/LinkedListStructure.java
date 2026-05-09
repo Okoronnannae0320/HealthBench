@@ -1,11 +1,10 @@
-package healthbench.structures;
-import healthbench.model.PatientRecord;
-
+// LinkedListStructure stores patient records in a chain of nodes.
 public class LinkedListStructure implements DataStructure {
 
     private Node head;
     private int size;
 
+    // Each node stores one record and a reference to the next node.
     private class Node {
         PatientRecord record;
         Node next;
@@ -16,11 +15,13 @@ public class LinkedListStructure implements DataStructure {
         }
     }
 
+    // Begin with an empty list.
     public LinkedListStructure() {
         head = null;
         size = 0;
     }
 
+    // Append the new record to the end of the list.
     public void insertRecord(PatientRecord record) {
         Node newNode = new Node(record);
 
@@ -37,6 +38,7 @@ public class LinkedListStructure implements DataStructure {
         size++;
     }
 
+    // Linear search follows node links until the ID is found.
     public PatientRecord searchRecord(String id) {
         Node current = head;
 
@@ -50,6 +52,7 @@ public class LinkedListStructure implements DataStructure {
         return null;
     }
 
+    // Delete a record by relinking nodes around the matching ID.
     public boolean deleteRecord(String id) {
         if (head == null) return false;
 
@@ -73,6 +76,7 @@ public class LinkedListStructure implements DataStructure {
         return false;
     }
 
+    // Convert the linked list into an array for display and benchmarking.
     public PatientRecord[] traverseRecords() {
         PatientRecord[] result = new PatientRecord[size];
         Node current = head;
@@ -86,11 +90,12 @@ public class LinkedListStructure implements DataStructure {
         return result;
     }
 
-    //Merge Sorting Code by age  0-120
+    // Sort records by age using merge sort.
     public void sortByAge() {
         head = mergeSortIterative(head);
     }
 
+    // Iteratively merge sorted blocks until the whole list is sorted.
     private Node mergeSortIterative(Node head) {
         if (head == null || head.next == null) return head;
 
@@ -118,6 +123,7 @@ public class LinkedListStructure implements DataStructure {
         return dummy.next;
     }
 
+    // Split the list after a fixed number of nodes.
     private Node split(Node head, int step) {
         if (head == null) return null;
 
@@ -130,6 +136,7 @@ public class LinkedListStructure implements DataStructure {
         return second;
     }
 
+    // Merge two sorted node chains by patient age.
     private Node merge(Node a, Node b) {
         Node dummy = new Node(null);
         Node tail = dummy;
@@ -149,6 +156,7 @@ public class LinkedListStructure implements DataStructure {
         return dummy.next;
     }
 
+    // Count nodes so merge sort knows how many records are stored.
     private int getLength(Node head) {
         int count = 0;
         while (head != null) {
@@ -157,39 +165,4 @@ public class LinkedListStructure implements DataStructure {
         }
         return count;
     }
-
-    public void selectionSortByAge() {
-        // Convert linked list to array
-        PatientRecord[] arr = traverseRecords();
-
-        // Sort array using selection sort
-        selectionSort(arr);
-
-        // Rebuild linked list from sorted array
-        head = null;
-        size = 0;
-        for (PatientRecord r : arr) {
-            insertRecord(r);
-        }
-    }
-
-    private void selectionSort(PatientRecord[] arr) {
-        int n = arr.length;
-
-        for (int i = 0; i < n - 1; i++) {
-            int minIndex = i;
-
-            for (int j = i + 1; j < n; j++) {
-                if (arr[j].getAge() < arr[minIndex].getAge()) {
-                    minIndex = j;
-                }
-            }
-
-            PatientRecord temp = arr[minIndex];
-            arr[minIndex] = arr[i];
-            arr[i] = temp;
-        }
-    }
 }
-
-
