@@ -1,16 +1,17 @@
-package healthbench.structures;
-import healthbench.model.PatientRecord;
-
+// DynamicArray stores patient records in a resizable array.
 public class DynamicArray implements DataStructure {
 
+    // The array can have unused capacity, while size counts active records.
     private PatientRecord[] records;
     private int size;
 
+    // Start with a small capacity and grow when more space is needed.
     public DynamicArray() {
         records = new PatientRecord[10];
         size = 0;
     }
 
+    // Add a record at the next available index.
     public void insertRecord(PatientRecord record) {
         if (size == records.length) {
             resize();
@@ -19,6 +20,7 @@ public class DynamicArray implements DataStructure {
         size++;
     }
 
+    // Linear search checks each active record until the ID is found.
     public PatientRecord searchRecord(String id) {
         for (int i = 0; i < size; i++) {
             if (records[i].getId().equals(id)) {
@@ -28,6 +30,7 @@ public class DynamicArray implements DataStructure {
         return null;
     }
 
+    // Delete a record by shifting later records left.
     public boolean deleteRecord(String id) {
         for (int i = 0; i < size; i++) {
             if (records[i].getId().equals(id)) {
@@ -42,6 +45,7 @@ public class DynamicArray implements DataStructure {
         return false;
     }
 
+    // Return only the active records, not the unused array capacity.
     public PatientRecord[] traverseRecords() {
         PatientRecord[] result = new PatientRecord[size];
         for (int i = 0; i < size; i++) {
@@ -51,6 +55,7 @@ public class DynamicArray implements DataStructure {
     }
 
 
+    // Double the internal array capacity when it becomes full.
     private void resize() {
         PatientRecord[] newRecords = new PatientRecord[records.length * 2];
         for (int i = 0; i < records.length; i++) {
@@ -59,12 +64,13 @@ public class DynamicArray implements DataStructure {
         records = newRecords;
     }
 
-    // Merge Sorting Code by age 0-120
+    // Sort records by age using merge sort.
     public void sortByAge() {
         if (size <= 1) return;
         mergeSort(0, size - 1);
     }
 
+    // Recursively split the array before merging sorted sections.
     private void mergeSort(int left, int right) {
         if (left >= right) return;
 
@@ -74,6 +80,7 @@ public class DynamicArray implements DataStructure {
         merge(left, mid, right);
     }
 
+    // Merge two sorted sections back into the main array.
     private void merge(int left, int mid, int right) {
         PatientRecord[] temp = new PatientRecord[right - left + 1];
 
@@ -94,26 +101,6 @@ public class DynamicArray implements DataStructure {
 
         for (int x = 0; x < temp.length; x++) {
             records[left + x] = temp[x];
-
-        }
-    }
-
-    public void selectionSortByAge() {
-        if (size <= 1) return;
-
-        for (int i = 0; i < size - 1; i++) {
-            int minIndex = i;
-
-            for (int j = i + 1; j < size; j++) {
-                if (records[j].getAge() < records[minIndex].getAge()) {
-                    minIndex = j;
-                }
-            }
-
-            // swap
-            PatientRecord temp = records[minIndex];
-            records[minIndex] = records[i];
-            records[i] = temp;
         }
     }
 }
