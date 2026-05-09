@@ -1,139 +1,173 @@
-package healthbench.benchmark;
-import healthbench.model.PatientRecord;
-import healthbench.structures.*;
-import healthbench.util.DatasetLoader;
-
+// Benchmark measures operation time for each structure under the same workloads.
 public class Benchmark {
 
-    public static void main(String[] args) throws Exception {
+    // Dataset sizes used for small, medium, and full benchmark tests.
+    private static final int[] DATASET_SIZES = {1000, 5000, 10000};
+    private static final int RUNS_PER_TEST = 3;
+    private static final int SAMPLE_OPERATIONS = 100;
 
+    // Load the dataset once, then benchmark every structure.
+    public static void main(String[] args) throws Exception {
         System.out.println("Loading full dataset...");
         PatientRecord[] full = DatasetLoader.loadRecords("dataset/healthcare_dataset.csv");
-        System.out.println("Loaded: " + full.length + " records\n");
+        System.out.println("Loaded: " + full.length + " records");
+        System.out.println("Runs per test: " + RUNS_PER_TEST + "\n");
 
-        PatientRecord[] data5000 = DatasetLoader.limit(full, 5000);
-        PatientRecord[] data10000 = DatasetLoader.limit(full, 10000);
-        PatientRecord[] data20000 = DatasetLoader.limit(full, 20000);
-        PatientRecord[] data30000 = DatasetLoader.limit(full, 30000);
-
-        runAll("DynamicArray", new DynamicArray(), data5000, data10000, data20000, data30000);
-        runAll("LinkedListStructure", new LinkedListStructure(), data5000, data10000, data20000, data30000);
-        runAll("HashBasedStructure", new HashBasedStructure(), data5000, data10000, data20000, data30000);
-        runAll("PatientPriorityQueue", new PatientPriorityQueue(), data5000, data10000, data20000, data30000);
+        runAll("DynamicArray", full);
+        runAll("LinkedListStructure", full);
+        runAll("HashBasedStructure", full);
+        runAll("PatientPriorityQueue", full);
     }
 
-    private static void runAll(String name, DataStructure ds,
-                               PatientRecord[] d5k, PatientRecord[] d10k,
-                               PatientRecord[] d20k, PatientRecord[] d30k) {
-
+    // Run all benchmark sizes for one selected structure.
+    private static void runAll(String name, PatientRecord[] fullDataset) {
         System.out.println("===== " + name + " =====");
 
-        benchmark(ds, d5k, 5000, name);
-        benchmark(ds, d10k, 10000, name);
-        benchmark(ds, d20k, 20000, name);
-        benchmark(ds, d30k, 30000, name);
+        for (int size : DATASET_SIZES) {
+            PatientRecord[] data = DatasetLoader.limit(fullDataset, size);
+            BenchmarkResult total = new BenchmarkResult();
+
+            for (int run = 0; run < RUNS_PER_TEST; run++) {
+                total.add(benchmark(createStructure(name), data, name));
+            }
+
+            BenchmarkResult average = total.average(RUNS_PER_TEST);
+            System.out.println(formatResult(size, average));
+        }
 
         System.out.println();
     }
 
-    private static void benchmark(DataStructure ds, PatientRecord[] data, int size, String name) {
+    // Create a fresh structure so each benchmark starts empty.
+    private static DataStructure createStructure(String name) {
+        if (name.equals("DynamicArray")) {
+            return new DynamicArray();
+        }
+        if (name.equals("LinkedListStructure")) {
+            return new LinkedListStructure();
+        }
+        if (name.equals("HashBasedStructure")) {
+            return new HashBasedStructure();
+        }
+        if (name.equals("PatientPriorityQueue")) {
+            return new PatientPriorityQueue();
+        }
+        throw new IllegalArgumentException("Unknown data structure: " + name);
+    }
 
-        long start, end;
+    // Measure insert, search, traversal, deletion, and optional sorting.
+    private static BenchmarkResult benchmark(DataStructure ds, PatientRecord[] data, String name) {
+        long start;
+        long end;
 
-        // INSERT
         start = System.nanoTime();
-        for (PatientRecord r : data) ds.insertRecord(r);
+        for (PatientRecord r : data) {
+            ds.insertRecord(r);
+        }
         end = System.nanoTime();
         long insertTime = end - start;
 
+        int operations = Math.min(SAMPLE_OPERATIONS, data.length);
 
-
-        // SEARCH TESTS (begin/mid/end/null)
-
-        // Beginning
         start = System.nanoTime();
-        ds.searchRecord(data[0].getId());
+        for (int i = 0; i < operations; i++) {
+            ds.searchRecord(data[i].getId());
+        }
         end = System.nanoTime();
-        long searchBeginning = end - start;
+        long searchTime = end - start;
 
-        // Middle
         start = System.nanoTime();
-        ds.searchRecord(data[data.length / 2].getId());
+        ds.traverseRecords();
         end = System.nanoTime();
-        long searchMiddle = end - start;
+        long traversalTime = end - start;
 
-        // End
         start = System.nanoTime();
-        ds.searchRecord(data[data.length - 1].getId());
-        end = System.nanoTime();
-        long searchEnd = end - start;
-
-        // Null (not found)
-        start = System.nanoTime();
-        ds.searchRecord("ID_NOT_FOUND_123456");
-        end = System.nanoTime();
-        long searchNull = end - start;
-
-
-        // DELETE (delete first 100 items)
-        start = System.nanoTime();
-        for (int i = 0; i < 100 && i < data.length; i++) {
+        for (int i = 0; i < operations; i++) {
             ds.deleteRecord(data[i].getId());
         }
         end = System.nanoTime();
         long deleteTime = end - start;
 
-
-
-        // SORTING (DynamicArray + LinkedList)
-
-        long mergeSortTime = -1;
-        long selectionSortTime = -1;
-
+        long sortTime = -1;
         if (name.equals("DynamicArray")) {
             DynamicArray da = (DynamicArray) ds;
-
-            // Merge Sort
             start = System.nanoTime();
             da.sortByAge();
             end = System.nanoTime();
-            mergeSortTime = end - start;
-
-            // Selection Sort
-            start = System.nanoTime();
-            da.selectionSortByAge();
-            end = System.nanoTime();
-            selectionSortTime = end - start;
-        }
-
-        if (name.equals("LinkedListStructure")) {
+            sortTime = end - start;
+        } else if (name.equals("LinkedListStructure")) {
             LinkedListStructure ll = (LinkedListStructure) ds;
-
-            // Merge Sort
             start = System.nanoTime();
             ll.sortByAge();
             end = System.nanoTime();
-            mergeSortTime = end - start;
-
-            // Selection Sort
-            start = System.nanoTime();
-            ll.selectionSortByAge();
-            end = System.nanoTime();
-            selectionSortTime = end - start;
+            sortTime = end - start;
         }
 
+        return new BenchmarkResult(insertTime, searchTime, deleteTime, traversalTime, sortTime);
+    }
 
+    // Format averaged times for console output.
+    private static String formatResult(int size, BenchmarkResult result) {
+        String output = size + " records average -> Insert: " + result.insertTime +
+                " ns | Search: " + result.searchTime +
+                " ns | Delete: " + result.deleteTime +
+                " ns | Traverse: " + result.traversalTime + " ns";
 
-        // PRINT RESULTS
-        System.out.println(size + " records -> " +
-                "Insert: " + insertTime + " ns | " +
-                "Search Begin: " + searchBeginning + " ns | " +
-                "Search Mid: " + searchMiddle + " ns | " +
-                "Search End: " + searchEnd + " ns | " +
-                "Search Null: " + searchNull + " ns | " +
-                "Delete: " + deleteTime + " ns | " +
-                "Merge Sort: " + mergeSortTime + " ns | " +
-                "Selection Sort: " + selectionSortTime + " ns");
+        if (result.sortTime >= 0) {
+            output += " | Sort: " + result.sortTime + " ns";
+        } else {
+            output += " | Sort: N/A";
+        }
 
+        return output;
+    }
+
+    // BenchmarkResult stores timing values for one run or average result.
+    private static class BenchmarkResult {
+        long insertTime;
+        long searchTime;
+        long deleteTime;
+        long traversalTime;
+        long sortTime;
+
+        BenchmarkResult() {
+            this(0, 0, 0, 0, -1);
+        }
+
+        BenchmarkResult(long insertTime, long searchTime, long deleteTime,
+                        long traversalTime, long sortTime) {
+            this.insertTime = insertTime;
+            this.searchTime = searchTime;
+            this.deleteTime = deleteTime;
+            this.traversalTime = traversalTime;
+            this.sortTime = sortTime;
+        }
+
+        // Add another run's times into the total.
+        void add(BenchmarkResult other) {
+            insertTime += other.insertTime;
+            searchTime += other.searchTime;
+            deleteTime += other.deleteTime;
+            traversalTime += other.traversalTime;
+
+            if (other.sortTime >= 0) {
+                if (sortTime < 0) {
+                    sortTime = 0;
+                }
+                sortTime += other.sortTime;
+            }
+        }
+
+        // Convert the total times into average times.
+        BenchmarkResult average(int runs) {
+            long averageSortTime = sortTime >= 0 ? sortTime / runs : -1;
+            return new BenchmarkResult(
+                    insertTime / runs,
+                    searchTime / runs,
+                    deleteTime / runs,
+                    traversalTime / runs,
+                    averageSortTime
+            );
+        }
     }
 }
